@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xbarpy"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
 ]
 requires-python = ">=3.8"
@@ -18,8 +18,9 @@ description = "A Python package to support working with X-bar structures."
 readme = "README.md"
 keywords = ["linugistics", "syntax", "x-bar theory", "universal grammar"]
 classifiers = [
-  "Development Status :: 1 - Planning",
-  "Programming Language :: Python"
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python",
+  "Topic :: Text Processing :: Linguistic"
 ]
 
 [project.urls]
@@ -29,3 +30,10 @@ Repository = "https://github.com/nwhitehair/xbarpy"
 [tool.setuptools]
 package-dir = {"" = "src"}
 
+[tool.ruff.lint]
+ignore = ["UP006", "UP007", "UP045"]
+
+[tool.pylint."MESSAGES CONTROL"]
+good-names = [
+    "bar",
+]
