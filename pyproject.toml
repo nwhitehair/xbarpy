@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xbarpy"
+version = "0.0.0"
+dependencies = [
+]
+requires-python = ">=3.8"
+authors = [
+  {name = "Nathan Whitehair"},
+]
+maintainers = [
+  {name = "Nathan Whitehair"}
+]
+description = "A Python package to support working with X-bar structures."
+readme = "README.md"
+keywords = ["linugistics", "syntax", "x-bar theory", "universal grammar"]
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "Programming Language :: Python"
+]
+
+[project.urls]
+Homepage = "https://nwhitehair.com"
+Repository = "https://github.com/nwhitehair/xbarpy"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
