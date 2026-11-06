@@ -14,7 +14,8 @@ class XX(Constituent):
     _constraints = {} # noqa: RUF012
     _overrides = {} # noqa: RUF012
 
-    def __init__(self, primary_node: Constituent, associated_node: Optional[Constituent] = None,
+    def __init__(self, primary_node: Optional[Constituent] = None,
+                 associated_node: Optional[Constituent] = None,
                  parent: Optional[Constituent] = None, reference: Optional[Constituent] = None,
                  is_reversed: bool = False):
         super().__init__(primary_node=primary_node, associated_node=associated_node, parent=parent,
@@ -55,6 +56,7 @@ class XP(XX):
     """
     The base class for all XP objects.
     """
+    _label = "XP"
     def __init__(self, xbar_node, specifier: Optional[Constituent],
                  parent: Optional[Constituent] = None, reference: Optional[Constituent] = None):
         super().__init__(primary_node=xbar_node, associated_node=specifier, parent=parent,
@@ -70,12 +72,12 @@ class XP(XX):
 
     def phrase_governs(self, constituent: Constituent, include_moved: bool = False,
                    follow_traces: bool = True) -> bool:
-        g_restriction = lambda g: isinstance(g, XP)
+        g_restriction = lambda g: isinstance(g, XP)  # pylint: disable=unnecessary-lambda-assignment
         return self.governs(constituent=constituent, include_moved=include_moved,
                             follow_traces=follow_traces, g_restriction=g_restriction)
 
     def to_string(self) -> str:
-        nodes = filter(lambda x: not x is None, [self.specifier, self.xbar])
+        nodes = list(filter(lambda x: not x is None, [self.specifier, self.xbar]))
         if not self.get_parameter("specifier_initial"):
             nodes = nodes[::-1]
         if self.is_reversed:
@@ -86,6 +88,7 @@ class XBar(XX):
     """
     The base class for all X' objects.
     """
+    _label = "X'"
     def __init__(self, primary: Union[XBar, X], complement_or_adjunct: XP = None,
                  parent: Optional[Union[XBar, XP]] = None, reference: Optional[Constituent] = None,
                  is_reversed: bool = False):
@@ -123,7 +126,7 @@ class XBar(XX):
         return self.has_complement if self.has_complement else self.associated_node
 
     def to_string(self) -> str:
-        nodes = filter(lambda x: not x is None, [self.primary_node, self.associated_node])
+        nodes = list(filter(lambda x: not x is None, [self.primary_node, self.associated_node]))
         if self.has_head and not self.get_parameter("head_initial"):
             nodes = nodes[::-1]
         if self.has_adjunct and not self.get_parameter("adjunct_initial"):
@@ -136,9 +139,10 @@ class X(XX):
     """
     The base class for all X (head) objects.
     """
+    _label = "X"
     _valid_parameters = set() # noqa: RUF012
     def __init__(self, text: str = "", **parameters):
-        super().__init__(primary_node=None, associated_node=None)
+        super().__init__()
         self._parameters = {}
         for parameter_name, parameter_value in parameters.items():
             if parameter_name not in self._valid_parameters:
@@ -149,7 +153,7 @@ class X(XX):
 
     def head_governs(self, constituent: Constituent, include_moved: bool = False,
                    follow_traces: bool = True) -> bool:
-        g_restriction = lambda g: isinstance(g, X)
+        g_restriction = lambda g: isinstance(g, X)  # pylint: disable=unnecessary-lambda-assignment
         return self.governs(constituent=constituent, include_moved=include_moved,
                             follow_traces=follow_traces, g_restriction=g_restriction)
 

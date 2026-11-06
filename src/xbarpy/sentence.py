@@ -11,6 +11,7 @@ class Sentence:
     def __init__(self, root: XP, language_parameters: LanguageParameters):
         self._root = root
         self._language_parameters = language_parameters
+        self.link()
 
     def get_all_constituents(self) -> Set[Constituent]:
         return_set = set()

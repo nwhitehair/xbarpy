@@ -8,8 +8,10 @@ if TYPE_CHECKING:
     from .sentence import Sentence
 
 class Constituent(BranchingNode):
-    def __init__(self, primary_node: Optional[Constituent], associated_node: Optional[Constituent],
-                 parent: Optional[Constituent] = None, reference: Optional[Constituent] = None,
+    def __init__(self, primary_node: Optional[Constituent] = None,
+                 associated_node: Optional[Constituent] = None,
+                 parent: Optional[Constituent] = None,
+                 reference: Optional[Constituent] = None,
                  is_reversed: bool = False):
         super().__init__(parent=parent)
         self.set_child(primary_node, index=0)
@@ -71,7 +73,7 @@ class Constituent(BranchingNode):
             if is_trace and follow_traces:
                 child = child.reference
             elif not is_trace and child.is_moved and not include_moved:
-                    continue
+                continue
             children.add(child)
         return children
 
@@ -99,16 +101,16 @@ class Constituent(BranchingNode):
     def get_descendants(self, follow_traces: bool = True, include_moved: bool = False) \
         -> Set[Constituent]:
         descendants = set()
-        children: Set[Constituent] = self.get_children(follow_traces=follow_traces, 
+        children: Set[Constituent] = self.get_children(follow_traces=follow_traces,
                                                        include_moved=include_moved)
         for child in children:
             descendants.add(child)
-            descendants |= child.get_descendants(follow_traces=follow_traces, 
+            descendants |= child.get_descendants(follow_traces=follow_traces,
                                                  include_moved=include_moved)
         return descendants
 
     def c_commands(self, constituent: Constituent, include_moved: bool = False,
-                   follow_traces: bool = True, include_asymmetric: bool = True, 
+                   follow_traces: bool = True, include_asymmetric: bool = True,
                    include_symmetric: bool = True) -> bool:
         siblings = self.get_siblings(include_moved=include_moved, follow_traces=follow_traces)
         if constituent in siblings:
@@ -123,7 +125,7 @@ class Constituent(BranchingNode):
         return False
 
     def get_c_commanded(self, include_moved: bool = False,
-                   follow_traces: bool = True, include_asymmetric: bool = True, 
+                   follow_traces: bool = True, include_asymmetric: bool = True,
                    include_symmetric: bool = True) -> Set[Constituent]:
         '''Returns all Constituents that are c-commanded by this Constituent.'''
         results = set()
@@ -132,21 +134,21 @@ class Constituent(BranchingNode):
             if include_symmetric:
                 results.add(sibling)
             if include_asymmetric:
-                results |= sibling.get_descendants(follow_traces=follow_traces, 
+                results |= sibling.get_descendants(follow_traces=follow_traces,
                                                    include_moved=include_moved)
         return results
 
     def governs(self, constituent: Constituent, include_moved: bool = False,
                    follow_traces: bool = True, g_restriction: Optional[Callable] = None) \
                     -> bool:
-        if not self.c_commands(constituent=constituent, include_moved=include_moved, 
+        if not self.c_commands(constituent=constituent, include_moved=include_moved,
                                follow_traces=follow_traces):
             return False
         if g_restriction is None:
-            g_restriction = lambda g: True
+            g_restriction = lambda g: True # pylint: disable=unnecessary-lambda-assignment
         g_restriction = cast(callable, g_restriction)
         for g in self.get_c_commanded(include_moved=include_moved, follow_traces=follow_traces):
-            if not(g_restriction(g)):
+            if not g_restriction(g):
                 continue
             if g.c_commands(constituent=constituent, include_moved=include_moved,
                             follow_traces=follow_traces, include_symmetric=False):
@@ -204,7 +206,7 @@ class Constituent(BranchingNode):
     def get_bound(self, include_moved: bool = False,
                    follow_traces: bool = True) -> Set[Constituent]:
         bound_constituents = set()
-        for candidate in self.get_c_commanded(include_moved=include_moved, 
+        for candidate in self.get_c_commanded(include_moved=include_moved,
                                               follow_traces=follow_traces):
             if self.coindexed_with(constituent=candidate, follow_traces=follow_traces,
                                    include_moved=include_moved):

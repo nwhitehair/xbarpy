@@ -4,4 +4,4 @@ from .language_parameters import LanguageParameters
 from .sentence import Sentence
 from .xx import *
 
-__all__ = ["LanguageParameters", "Sentence", "xbar"]
+__all__ = ["LanguageParameters", "Sentence"]
