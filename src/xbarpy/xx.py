@@ -123,7 +123,7 @@ class XBar(XX):
 
     @property
     def complement(self) -> Optional[Constituent]:
-        return self.has_complement if self.has_complement else self.associated_node
+        return self.associated_node if self.has_complement else None
 
     def to_string(self) -> str:
         nodes = list(filter(lambda x: not x is None, [self.primary_node, self.associated_node]))

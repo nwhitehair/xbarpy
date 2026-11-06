@@ -40,7 +40,7 @@ class BranchingNode:
 
     @property
     def is_root(self) -> bool:
-        return self._parent is not None
+        return self._parent is None
 
     @property
     def is_terminal(self) -> bool:
