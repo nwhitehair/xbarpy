@@ -1,7 +1,7 @@
 __version__ = '0.1.0'
 
-from .xx import *
 from .language_parameters import LanguageParameters
 from .sentence import Sentence
+from .xx import *
 
-__all__ = ["LanguageParameters", "xbar"]
+__all__ = ["LanguageParameters", "Sentence", "xbar"]

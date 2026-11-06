@@ -5,6 +5,7 @@ from typing import Optional, Union
 from ._psdef import _phrase_structure_definitions
 from .constituent import Constituent
 
+
 class XX(Constituent):
     """
     The base class for all XP, X-bar, and X objects.
