@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import Optional, Union
+from typing import Dict, Optional, Tuple, Union
 
 from ._psdef import _phrase_structure_definitions
 from .constituent import Constituent
 
+_all_xx_by_name : Dict[str, type] = {}
 
 class XX(Constituent):
     """
@@ -41,6 +42,7 @@ class XX(Constituent):
         cls._constraints = {}
         cls._overrides = {}
         cls._linked_objects = {}
+        _all_xx_by_name[cls.__name__] = cls
 
     def get_parameter(self, parameter_name: str):
         if self.sentence is None:
@@ -57,8 +59,11 @@ class XP(XX):
     The base class for all XP objects.
     """
     _label = "XP"
-    def __init__(self, xbar_node, specifier: Optional[Constituent],
+    def __init__(self, xbar_node, specifier: Optional[Constituent] = None,
                  parent: Optional[Constituent] = None, reference: Optional[Constituent] = None):
+        if not isinstance(xbar_node, self.XBar_type):
+            valid_typenames = [xbar_type.__name__ for xbar_type in self.XBar_type]
+            raise TypeError(f"For {type(self).__name__}, xbar_node type must be one of {valid_typenames} (got {type(xbar_node).__name__}).")
         super().__init__(primary_node=xbar_node, associated_node=specifier, parent=parent,
                          reference=reference)
 
@@ -135,6 +140,9 @@ class XBar(XX):
             nodes = nodes[::-1]
         return " ".join([node.to_string() for node in nodes])
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(primary={self.primary_node}, complement_or_adjunct={self.associated_node}, parent={self.parent}, reference={self.reference})"
+
 class X(XX):
     """
     The base class for all X (head) objects.
@@ -160,9 +168,12 @@ class X(XX):
     def to_string(self) -> str:
         return self._text
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(text=\"{self._text}\")"
+
 XX._linked_objects = ({'XP': (XP,), 'XBar': (XBar,), 'X': (X,)})
 
-def _build_phrase_classes(ps_def) -> type:
+def _build_phrase_classes(ps_def) -> Tuple[type, type, type]:
     head = type(ps_def['head'], (X,), {})
     head._constraints.update(ps_def.get("head_constraints", {}))
     head._overrides.update(ps_def.get("head_overrides", {}))
@@ -181,9 +192,15 @@ def _build_phrase_classes(ps_def) -> type:
     head._linked_objects.update(linked_objects)
     p._linked_objects.update(linked_objects)
     bar._linked_objects.update(linked_objects)
-    return head, p, bar
+    return (head, p, bar)
 
 for definition in _phrase_structure_definitions:
     objects = _build_phrase_classes(definition)
     for obj in objects:
         globals()[obj.__name__] = obj
+
+def get_xx(xx_name: str) -> type:
+    xx = _all_xx_by_name.get(xx_name)
+    if xx is None:
+        raise AttributeError(f"The object {xx_name} is not defined.")
+    return xx

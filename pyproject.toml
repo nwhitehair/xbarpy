@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "xbarpy"
 version = "0.1.0"
 dependencies = [
+  "lark"
 ]
 requires-python = ">=3.8"
 authors = [
