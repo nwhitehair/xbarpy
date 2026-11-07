@@ -171,7 +171,7 @@ class X(XX):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(text=\"{self._text}\")"
 
-XX._linked_objects = ({'XP': (XP,), 'XBar': (XBar,), 'X': (X,)})
+XX._linked_objects = {'XP': (XP,), 'XBar': (XBar,), 'X': (X,)}
 
 def _build_phrase_classes(ps_def) -> Tuple[type, type, type]:
     head = type(ps_def['head'], (X,), {})
