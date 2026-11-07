@@ -11,12 +11,10 @@ class Constituent(BranchingNode):
     def __init__(self, primary_node: Optional[Constituent] = None,
                  associated_node: Optional[Constituent] = None,
                  parent: Optional[Constituent] = None,
-                 reference: Optional[Constituent] = None,
-                 is_reversed: bool = False):
+                 reference: Optional[Constituent] = None):
         super().__init__(parent=parent)
         self.set_child(primary_node, index=0)
         self.set_child(associated_node, index=1)
-        self.set_reversed(is_reversed)
         self._trace = None
         self._reference = reference
         self._sentence = None
@@ -38,9 +36,6 @@ class Constituent(BranchingNode):
     def sentence(self) -> Optional[Sentence]:
         return self._sentence
 
-    def set_reversed(self, is_reversed: bool = False):
-        self._is_reversed = is_reversed
-
     def move(self, new_parent: Constituent):
         trace = Trace(parent=self.parent, reference=self)
         self._set_parent(parent=new_parent)
@@ -50,10 +45,6 @@ class Constituent(BranchingNode):
     @property
     def is_moved(self) -> bool:
         return self._trace is not None
-
-    @property
-    def is_reversed(self) -> bool:
-        return self._is_reversed
 
     @property
     def children(self) -> Tuple[Constituent, ...]:

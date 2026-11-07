@@ -6,6 +6,11 @@ from ._psdef import _phrase_structure_definitions
 from .constituent import Constituent
 
 _all_xx_by_name : Dict[str, type] = {}
+_xx_instances_by_id : Dict[str, type] = {}
+
+def _xx_id_parser(id: str, xx_instance):
+    _xx_instances_by_id[id] = xx_instance
+    return id
 
 class XX(Constituent):
     """
@@ -14,14 +19,17 @@ class XX(Constituent):
     _linked_objects = {}  # noqa: RUF012
     _constraints = {} # noqa: RUF012
     _overrides = {} # noqa: RUF012
+    _valid_properties = {
+        'reversed': {'type': bool, 'parser': bool, 'default': False},
+        'id': {'type': str, 'parser': _xx_id_parser, 'default': None, 'requires_ref': True}
+        }
 
     def __init__(self, primary_node: Optional[Constituent] = None,
                  associated_node: Optional[Constituent] = None,
-                 parent: Optional[Constituent] = None, reference: Optional[Constituent] = None,
-                 is_reversed: bool = False):
+                 parent: Optional[Constituent] = None, reference: Optional[Constituent] = None):
         super().__init__(primary_node=primary_node, associated_node=associated_node, parent=parent,
-                         reference=reference, is_reversed=is_reversed)
-
+                         reference=reference)
+        self._properties = {}
 
     @property
     def XP_type(self) -> type:
@@ -35,6 +43,18 @@ class XX(Constituent):
     def X_type(self) -> type:
         return self._linked_objects['X']
 
+    @classmethod
+    def get_xbar_type(cls) -> type:
+        return cls._linked_objects['XBar']
+
+    @classmethod
+    def get_xp_type(cls) -> type:
+        return cls._linked_objects['XP']
+
+    @classmethod
+    def get_x_type(cls) -> type:
+        return cls._linked_objects['X']
+
     def __init_subclass__(cls):
         # Whenever a subclass is created, give it its own constraints dictionary and label.
         # Also, add it to the global set of all constituents; we'll potentially use this to
@@ -42,6 +62,7 @@ class XX(Constituent):
         cls._constraints = {}
         cls._overrides = {}
         cls._linked_objects = {}
+        cls._counter = 0
         _all_xx_by_name[cls.__name__] = cls
 
     def get_parameter(self, parameter_name: str):
@@ -53,6 +74,14 @@ class XX(Constituent):
             )
         return self._overrides.get(parameter_name, language_parameter)
 
+    def set_property(self, propname: str, propval: str):
+        if propname not in self._valid_properties:
+            raise ValueError(f"Invalid property for {type(self).__name__}: '{propname}'")
+        self._properties[propname] = propval
+
+    def get_property(self, propname: str):
+        default = self._valid_properties[propname]['default']
+        return self._properties.get(propname, default)
 
 class XP(XX):
     """
@@ -85,7 +114,7 @@ class XP(XX):
         nodes = list(filter(lambda x: not x is None, [self.specifier, self.xbar]))
         if not self.get_parameter("specifier_initial"):
             nodes = nodes[::-1]
-        if self.is_reversed:
+        if self.get_property('reversed'):
             nodes = nodes[::-1]
         return " ".join([node.to_string() for node in nodes])
 
@@ -95,10 +124,9 @@ class XBar(XX):
     """
     _label = "X'"
     def __init__(self, primary: Union[XBar, X], complement_or_adjunct: XP = None,
-                 parent: Optional[Union[XBar, XP]] = None, reference: Optional[Constituent] = None,
-                 is_reversed: bool = False):
+                 parent: Optional[Union[XBar, XP]] = None, reference: Optional[Constituent] = None):
         super().__init__(primary_node=primary, associated_node=complement_or_adjunct,
-                         parent=parent, reference=reference, is_reversed=is_reversed)
+                         parent=parent, reference=reference)
         if not isinstance(primary, (XBar, X)):
             raise TypeError(f"XBar subclasses must be initialized with an XBar or X instance as \
                             the primary node (got {type(primary).__name__}).")
@@ -136,7 +164,7 @@ class XBar(XX):
             nodes = nodes[::-1]
         if self.has_adjunct and not self.get_parameter("adjunct_initial"):
             nodes = nodes[::-1]
-        if self.is_reversed:
+        if self.get_property('reversed'):
             nodes = nodes[::-1]
         return " ".join([node.to_string() for node in nodes])
 
@@ -171,24 +199,33 @@ class X(XX):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(text=\"{self._text}\")"
 
-XX._linked_objects = {'XP': (XP,), 'XBar': (XBar,), 'X': (X,)}
+XX._linked_objects = {'XP': XP, 'XBar': XBar, 'X': X}
 
 def _build_phrase_classes(ps_def) -> Tuple[type, type, type]:
     head = type(ps_def['head'], (X,), {})
     head._constraints.update(ps_def.get("head_constraints", {}))
     head._overrides.update(ps_def.get("head_overrides", {}))
     head._label = ps_def.get("head_label", ps_def["head"][0])
+    head._valid_properties = {}
+    head._valid_properties.update(X._valid_properties)
+    head._valid_properties.update(ps_def.get("head_valid_properties", {}))
 
     p = type(ps_def['p'], (XP,), {})
     p._constraints.update(ps_def.get("p_constraints", {}))
     p._overrides.update(ps_def.get("p_overrides", {}))
+    p._valid_properties = {}
+    p._valid_properties.update(XP._valid_properties)
+    p._valid_properties.update(ps_def.get("p_valid_properties", {}))
 
     bar = type(ps_def['bar'], (XBar,), {})
     bar._constraints.update(ps_def.get("bar_constraints", {}))
     bar._overrides.update(ps_def.get("bar_overrides", {}))
     bar._label = ps_def.get("bar_label", ps_def['bar'].replace('Bar', '\''))
+    bar._valid_properties = {}
+    bar._valid_properties.update(XBar._valid_properties)
+    bar._valid_properties.update(ps_def.get("bar_valid_properties", {}))
     
-    linked_objects = {'XP': (p,), 'XBar': (bar,), 'X': (head,)}
+    linked_objects = {'XP': p, 'XBar': bar, 'X': head}
     head._linked_objects.update(linked_objects)
     p._linked_objects.update(linked_objects)
     bar._linked_objects.update(linked_objects)
